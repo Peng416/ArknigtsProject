@@ -102,8 +102,7 @@ def touchlist(imglist, pausetime, stage):
 
 def compare(img_name):
     screenshot()
-    p = auto.locate(f'./picture/{Is}/{img_name}',
-                    'screenshot.png', confidence=c)
+    p = auto.locate(f'./picture/{Is}/{img_name}','screenshot.png', confidence=c)
     if p != None:
         return True
     else:
