@@ -79,7 +79,7 @@ def touchlist(imglist, pausetime, stage):
         screenshot()
         for img_name in imglist:
             p = auto.locate(f'./picture/{Is}/{img_name}', 'screenshot.png', confidence=c)
-            if stage == 'start':  # 开始阶段
+            if stage == 'start' and img_name == 'os.png':  # 开始阶段
                 if p != None:  # 点击op按钮
                     x, y = auto.center(p)
                     tap(x, y)
