@@ -16,13 +16,9 @@ ip = config.get('main', 'ip')  # 模拟器端口ip地址
 c = config.get('main', 'c')  # 图片识别率
 Is = config.get('main', 'Is')  # 默认分辨率为1280*720
 
-'''定义变量'''
-
 
 '''函数部分'''
 # 从模拟器上截图并返回图片
-
-
 def screenshot():
     os.system(f"adb shell screencap -p {Apath}/screenshot.png")
     os.system("adb pull /sdcard/screenshot.png")
@@ -57,56 +53,51 @@ def tap(x, y):  # 点击坐标 x，y
     print(f'点击坐标 {x} {y}')
     os.system(f'adb shell input tap {x} {y}')
 
-# 触摸选中的图片
-
-
-def touch(img_name, pausetime):
-    screenshot()
-    p = auto.locate(f'./picture/{Is}/{img_name}',
-                    'screenshot.png', confidence=c)
-    if p != None:
-        x, y = auto.center(p)
-        tap(x, y)
-        time.sleep(pausetime)
-    elif p == None:
-        print('图片未识别')
 
 # 对图片进行多次选择分析
-
-
 def touchlist(imglist, pausetime, stage):
-    while True:
+    if stage == 'battling':
         screenshot()
-        for img_name in imglist:
-            p = auto.locate(f'./picture/{Is}/{img_name}', 'screenshot.png', confidence=c)
-            if stage == 'start' and img_name == 'os.png':  # 开始阶段
-                if p != None:  # 点击op按钮
-                    x, y = auto.center(p)
-                    tap(x, y)
+        while True:
+            for img_name in imglist:
+                if auto.locate(f'./picture/{Is}/{img_name}','screenshot.png', confidence=c) == None:
+                    print('战斗进行中...')
+                    screenshot()
                     time.sleep(pausetime)
-                    return None
-                elif p != None:  # 退出理智不足的画面
-                    print('\n----理智不足----')
-                    sys.exit(0)
-            elif stage == 'end':  # 结束阶段
-                if p != None:  # 点击结算画面
-                    x, y = auto.center(p)
-                    tap(x, y)
-                    time.sleep(pausetime)
-                    return None
-                elif p != None:  # 任务失败 多点一次
-                    tap(hx, hy)
-                    time.sleep(pausetime)
-                    return None
-
-
-def compare(img_name):
-    screenshot()
-    p = auto.locate(f'./picture/{Is}/{img_name}','screenshot.png', confidence=c)
-    if p != None:
-        return True
+                else:
+                    print('战斗结束，退出战斗...')
+                    return None 
     else:
-        return False
+        while True:
+            screenshot()
+            for img_name in imglist:
+                p = auto.locate(f'./picture/{Is}/{img_name}', 'screenshot.png', confidence=c)
+                if stage == 'start' and p != None:  # 开始阶段
+                    if img_name == 'start_battle.png': # 点击开始战斗按钮
+                        x, y = auto.center(p)
+                        tap(x, y)
+                        time.sleep(pausetime)
+                        break
+                    elif img_name == 'os.png':  # 点击op按钮
+                        x, y = auto.center(p)
+                        tap(x, y)
+                        time.sleep(pausetime)
+                        return None
+                    elif img_name == 'lzbz.png': # 退出理智不足的画面                   
+                        print('\n----理智不足----')
+                        sys.exit(0)
+                elif stage == 'end' and p != None :  # 结束阶段
+                    if img_name == 'confidence.png':  # 点击结算画面
+                        x, y = auto.center(p)
+                        tap(x, y)
+                        time.sleep(pausetime)
+                        return None
+                    elif img_name == 'defeat.png' or img_name == 'jm.png':# 任务失败 和 剿灭作战
+                        tap(hx, hy)
+                        time.sleep(pausetime)
+                        tap(hx, hy)
+                        time.sleep(pausetime)
+                        return None
 
 
 def battle(times):
@@ -115,18 +106,17 @@ def battle(times):
     while i < n:
         i += 1
         print(f'--------第{i}次战斗开始--------')
-        touch('start_battle.png', pausetime)
-        touchlist(('os.png', 'lzbz.png'), pausetime, 'start')
-        while True:
-            if compare("confidence.png") == False:
-                time.sleep(6)
-                print('战斗进行中...')
-            else:
-                break
-        touchlist(("confidence.png",'defeat.png'), pausetime,'end')
+        touchlist(('start_battle.png','os.png', 'lzbz.png'), pausetime, 'start')
+        touchlist(('confidence.png','defeat.png','jm.png'),6,'battling')
+        touchlist(("confidence.png", 'defeat.png','jm.png'), pausetime, 'end')
         print(f"---------第{i}次战斗结束--------")
-        while compare("start_battle.png") == False:
-            time.sleep(3)
+        time.sleep(pausetime)
+        while  auto.locate(f'./picture/{Is}/start_battle.png','screenshot.png', confidence=c) == None:
+            screenshot()
+            print('等待开始按钮...')
+            time.sleep(1)
+
+
 
 
 '''初始化部分'''
@@ -146,5 +136,10 @@ if key == "f1":
     battle(99999)
 elif key == "f2":
     os.system('pause')
-    times = input("请输入次数")
-    battle(times)
+    while True:
+        try:
+            times = input("请输入次数")
+            battle(times)
+            break
+        except:
+            print('请输入正确的值')
