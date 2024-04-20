@@ -70,6 +70,7 @@ def touchlist(imglist, pausetime, stage):
     else:
         while True:
             screenshot()
+            have_lzhj = 0
             for img_name in imglist:
                 p = auto.locate(f'./picture/{Is}/{img_name}', 'screenshot.png', confidence=c)
                 if stage == 'start' and p != None:  # 开始阶段
@@ -84,14 +85,27 @@ def touchlist(imglist, pausetime, stage):
                         time.sleep(pausetime)
                         return None
                     elif img_name == 'lzbz.png': # 退出理智不足的画面                   
-                        print('\n----理智不足----')
-                        sys.exit(0)
+                        lzhj = auto.locate(f'./picture/{Is}/lzhj.png', 'screenshot.png', confidence=c)
+                        if lzhj != None:
+                            print('\n----使用理智合剂----')
+                            x, y = auto.center(p)
+                            tap(x, y)
+                            time.sleep(pausetime)
+                            break
+                        else:
+                            print('\n----理智不足----')
+                            sys.exit(0)
                 elif stage == 'end' and p != None :  # 结束阶段
                     if img_name == 'confidence.png':  # 点击结算画面
                         x, y = auto.center(p)
                         tap(x, y)
                         time.sleep(pausetime)
                         return None
+                    elif img_name == 'djts.png':
+                        x, y = auto.center(p)
+                        tap(x, y)
+                        time.sleep(pausetime)
+                        break
                     elif img_name == 'defeat.png' or img_name == 'jm.png':# 任务失败 和 剿灭作战
                         tap(hx, hy)
                         time.sleep(pausetime)
